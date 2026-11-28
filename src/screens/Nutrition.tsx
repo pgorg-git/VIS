@@ -70,6 +70,17 @@ export function Nutrition() {
   const total = useMemo(() => dayTotals(foodLog, date), [foodLog, date])
   const target = macroTargets(kcalTarget(phases, date), weights)
 
+  // the ring card out of sight (scrolled past the top): show the thin sticky bar
+  const ringCard = useRef<HTMLDivElement>(null)
+  const [compact, setCompact] = useState(false)
+  useEffect(() => {
+    const el = ringCard.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setCompact(!e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0, rootMargin: '-70px 0px 0px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
   const saveItems = (items: PhotoItem[]) => {
     const at = localIso()
     for (const it of items) {
@@ -97,7 +108,7 @@ export function Nutrition() {
       </div>
 
       <CheckinNudge />
-      <div className="card chrome-edge nut-ring-card">
+      <div className="card chrome-edge nut-ring-card" ref={ringCard}>
         <KcalRing eaten={total.kcal} target={target.kcal} flash={added} onClick={() => { haptic(); setSuggest(true) }} />
         <div className="nut-macros">
           <MacroBar label={tr('Eiweiß', 'Protein')} v={total.p} t={target.p} />
@@ -105,6 +116,13 @@ export function Nutrition() {
           <MacroBar label={tr('Fett', 'Fat')} v={total.f} t={target.f} />
         </div>
       </div>
+      {/* scrolled down: the nutrition box rides along at the top as a thin bar */}
+      <CompactNutrition show={compact} kcal={total.kcal} target={target} total={total} onTap={() => {
+        haptic()
+        const sc = ringCard.current?.closest('.screen')
+        if (sc && sc.scrollHeight > sc.clientHeight) sc.scrollTo({ top: 0, behavior: 'smooth' })
+        else window.scrollTo({ top: 0, behavior: 'smooth' })
+      }} />
       {target.kcal == null && <div className="hint"><span>{tr('Kein Kalorienziel – leg unter Körper eine Phase mit Kalorien an.', 'No calorie target – create a phase with calories under Body.')}</span></div>}
       {target.kcal != null && date === today() && new Date().getHours() >= 18 && total.kcal > 0 && total.p < target.p * 0.75 && (
         <div className="hint"><span>{tr('Noch ', 'Still ')}<b>{Math.round(target.p - total.p)} g {tr('Eiweiß', 'protein')}</b>{tr(' bis zu deinem Ziel – z. B. Skyr, Topfen oder ein Shake.', ' to your goal – e.g. skyr, quark or a shake.')}</span></div>
@@ -221,6 +239,31 @@ function KcalRing({ eaten, target, flash = 0, onClick }: { eaten: number; target
       </div>
       )}
     </button>
+  )
+}
+
+/** The nutrition box as a thin bar at the top while scrolling through the day. */
+function CompactNutrition({ show, kcal, target, total, onTap }: {
+  show: boolean
+  kcal: number
+  target: { kcal: number | null; p: number; c: number | null; f: number | null }
+  total: Macros
+  onTap: () => void
+}) {
+  const frac = target.kcal ? kcal / target.kcal : 0
+  const col = progressColors(frac)
+  const m = (v: number, t: number | null, label: string) => (
+    <span className="ncb-m"><i>{label}</i><b className="num">{Math.round(v)}</b>{t ? <small className="num">/{t}</small> : null}</span>
+  )
+  return createPortal(
+    <button className={'ncb' + (show ? ' on' : '')} onClick={onTap} aria-hidden={!show} tabIndex={show ? 0 : -1}>
+      <div className="ncb-top">
+        <span className="ncb-kcal num"><b>{fmtInt(kcal)}</b>{target.kcal ? <small> / {fmtInt(target.kcal)} kcal</small> : <small> kcal</small>}</span>
+        <span className="ncb-macros">{m(total.p, target.p, tr('E', 'P'))}{m(total.c, target.c, tr('K', 'C'))}{m(total.f, target.f, 'F')}</span>
+      </div>
+      <div className="ncb-track"><div style={{ width: `${Math.min(100, frac * 100)}%`, background: `linear-gradient(90deg, ${col.from}, ${col.to})` }} /></div>
+    </button>,
+    document.body,
   )
 }
 
