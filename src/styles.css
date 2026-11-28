@@ -1248,12 +1248,15 @@ button.nut-ring:active { transform: scale(.97); transition: transform .1s; }
 .profile-head .who > .link { text-align: center; }
 
 /* nutrition: the ring card turns into a thin sticky bar while scrolling down */
-.ncb { position: fixed; z-index: 41; left: 50%; top: calc(var(--safe-top) + 8px); width: min(calc(100% - 24px), 616px); transform: translate(-50%, -14px) scale(.96); opacity: 0; pointer-events: none;
+.ncb { position: fixed; z-index: 41; left: 50%; top: calc(var(--safe-top) + 8px); width: min(calc(100% - 24px), 616px); pointer-events: none;
+  /* follows the scroll: fades and drops in while the header and the ring card go away */
+  --k: clamp(0, calc((var(--np, 0) - .35) * 2.6), 1);
+  opacity: var(--k); transform: translate(-50%, calc((1 - var(--k)) * -16px)) scale(calc(.94 + var(--k) * .06));
   padding: 10px 14px 9px; border-radius: 18px; text-align: left; color: inherit;
   background: rgba(14,14,16,.82); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid var(--line-strong); box-shadow: 0 14px 40px rgba(0,0,0,.55);
-  transition: opacity .25s ease, transform .35s cubic-bezier(.2,.9,.3,1); }
-.ncb.on { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
+  transition: opacity .08s linear, transform .08s linear; }
+.ncb.on { pointer-events: auto; }
 .ncb-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .ncb-kcal b { font-size: 17px; font-weight: 800; }
 .ncb-kcal small { font-size: 12px; color: var(--text-2); }
@@ -1263,3 +1266,7 @@ button.nut-ring:active { transform: scale(.97); transition: transform .1s; }
 .ncb-m small { color: var(--text-3); }
 .ncb-track { margin-top: 7px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; }
 .ncb-track > div { height: 100%; border-radius: 2px; transition: width .4s ease; }
+
+/* the parts that make way for the bar, driven by --np */
+.np-fade { opacity: calc(1 - var(--np, 0) * 1.8); transform: translateY(calc(var(--np, 0) * -14px)); }
+.np-shrink { opacity: calc(1 - var(--np, 0) * 1.15); transform: scale(calc(1 - var(--np, 0) * .12)); transform-origin: 50% 0; }

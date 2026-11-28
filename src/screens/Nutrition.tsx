@@ -70,15 +70,36 @@ export function Nutrition() {
   const total = useMemo(() => dayTotals(foodLog, date), [foodLog, date])
   const target = macroTargets(kcalTarget(phases, date), weights)
 
-  // the ring card out of sight (scrolled past the top): show the thin sticky bar
+  // one movement while scrolling down: the header and the ring card fade and shrink
+  // away while the thin bar slides in (--np 0 → 1 on <html>, the bar lives in <body>)
   const ringCard = useRef<HTMLDivElement>(null)
   const [compact, setCompact] = useState(false)
   useEffect(() => {
     const el = ringCard.current
     if (!el) return
-    const io = new IntersectionObserver(([e]) => setCompact(!e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0, rootMargin: '-70px 0px 0px 0px' })
-    io.observe(el)
-    return () => io.disconnect()
+    const root = document.documentElement
+    let raf = 0
+    let last = -1
+    const update = () => {
+      raf = 0
+      const r = el.getBoundingClientRect()
+      // 0 while the card sits in its place, 1 once its lower edge reaches the bar
+      const p = Math.max(0, Math.min(1, (60 - r.top) / Math.max(1, r.height)))
+      if (Math.abs(p - last) < 0.005) return
+      last = p
+      root.style.setProperty('--np', p.toFixed(3))
+      setCompact(p > 0.55)
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { capture: true, passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll, { capture: true })
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+      root.style.removeProperty('--np')
+    }
   }, [])
 
   const saveItems = (items: PhotoItem[]) => {
@@ -95,11 +116,11 @@ export function Nutrition() {
 
   return (
     <div className="screen">
-      <div className="nut-top">
+      <div className="nut-top np-fade">
         <div className="eyebrow" style={{ margin: 0 }}>{tr('Ernährung', 'Nutrition')}</div>
         <EatStreak />
       </div>
-      <div className="nut-day">
+      <div className="nut-day np-fade">
         <button className="icon-btn" style={dayNav ? undefined : { visibility: 'hidden' }} onClick={() => setDate(addDays(date, -1))} aria-label={tr('Vorheriger Tag', 'Previous day')}><Icon.back /></button>
         <button className="nut-day-title" onClick={() => { if (dayNav && date !== today()) setDate(today()); else setDayNav(!dayNav) }}>
           <h1 className="title" style={{ margin: 0 }}>{date === today() ? tr('Heute', 'Today') : date === addDays(today(), -1) ? tr('Gestern', 'Yesterday') : dateLabel(date, false)}</h1>
@@ -108,7 +129,7 @@ export function Nutrition() {
       </div>
 
       <CheckinNudge />
-      <div className="card chrome-edge nut-ring-card" ref={ringCard}>
+      <div className="card chrome-edge nut-ring-card np-shrink" ref={ringCard}>
         <KcalRing eaten={total.kcal} target={target.kcal} flash={added} onClick={() => { haptic(); setSuggest(true) }} />
         <div className="nut-macros">
           <MacroBar label={tr('Eiweiß', 'Protein')} v={total.p} t={target.p} />
