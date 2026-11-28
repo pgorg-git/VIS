@@ -1278,3 +1278,8 @@ button.nut-ring:active { transform: scale(.97); transition: transform .1s; }
 .fr-cmp-row span { font-size: 12.5px; color: var(--text-2); }
 .fr-cmp-row b { font-size: 16px; font-weight: 750; color: var(--text-2); }
 .fr-cmp-row b.win { color: #7ff0bf; text-shadow: 0 0 12px rgba(63,214,154,.4); }
+
+/* profile header: name, plan badge and "edit profile" stacked and centered */
+.profile-head .who { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+.profile-head .nm-row { flex-direction: column; justify-content: center; gap: 6px; }
+.profile-head .who > .link { text-align: center; }
