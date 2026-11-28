@@ -117,14 +117,12 @@ export function Nutrition() {
         <input ref={photoInput} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) setPhoto(f); e.target.value = '' }} />
       </div>
 
-      {/* the day's entries in one box that scrolls on its own, so the page stays short */}
       {store.settings.mealSections ? (
-        <div className="card nut-day-box">
-        {MEALS.map((m) => {
+        MEALS.map((m) => {
           const items = day.filter((e) => e.meal === m.id)
           const kcal = items.reduce((n, e) => n + e.kcal, 0)
           return (
-            <div key={m.id} className="nut-meal">
+            <div key={m.id} className="card nut-meal" style={{ padding: '2px 14px', marginTop: 12 }}>
               <div className="nut-meal-head">
                 <b>{m.label}</b>
                 <span className="faint num">{items.length ? `${fmtInt(kcal)} kcal` : ''}</span>
@@ -133,10 +131,9 @@ export function Nutrition() {
               {items.map((e) => <EntryRow key={e.id} e={e} onOpen={() => setEditing(e)} />)}
             </div>
           )
-        })}
-        </div>
+        })
       ) : day.length > 0 && (
-        <div className="card nut-day-box">
+        <div className="card" style={{ padding: '2px 14px', marginTop: 12 }}>
           {day.map((e) => <EntryRow key={e.id} e={e} onOpen={() => setEditing(e)} />)}
         </div>
       )}

@@ -1283,9 +1283,3 @@ button.nut-ring:active { transform: scale(.97); transition: transform .1s; }
 .profile-head .who { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
 .profile-head .nm-row { flex-direction: column; justify-content: center; gap: 6px; }
 .profile-head .who > .link { text-align: center; }
-
-/* nutrition: the day's entries in one scrolling box */
-.nut-day-box { margin-top: 12px; padding: 2px 14px; max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.nut-day-box::-webkit-scrollbar { display: none; }
-.nut-day-box .nut-meal + .nut-meal { border-top: 1px solid rgba(255,255,255,.07); }
-.nut-day-box .nut-meal { margin-top: 0; padding: 2px 0 4px; }
